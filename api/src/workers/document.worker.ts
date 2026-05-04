@@ -1,9 +1,12 @@
-import { updateDocumentStatus } from '../config/database';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import { getDocument, updateDocumentStatus } from '../config/database';
 import { imageToText, pdfToText } from '../services/ocr.service';
 import { extractDocumentData } from '../services/groq.service';
 import path from 'path';
 
-export async function processDocument(documentId: string, filePath: string): Promise<void> {
+export async function processDocument(documentId: string, filePath: string) {
   try {
     await updateDocumentStatus(documentId, 'PROCESSING');
 

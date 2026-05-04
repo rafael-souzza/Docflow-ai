@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import documentRoutes from './routes/document.routes';
+import indexRoutes from './routes/index.routes';
+import searchRoutes from './routes/search.routes';
 import { documentQueue } from './services/queue.service';
 import { processDocument } from './workers/document.worker';
 
@@ -28,8 +30,12 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/documents', documentRoutes);
+app.use('/api/documents', indexRoutes);
+app.use('/api/search', searchRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
-  console.log(`📄 Upload endpoint: POST http://localhost:${PORT}/api/documents/upload`);
+  console.log(`📄 Upload: POST http://localhost:${PORT}/api/documents/upload`);
+  console.log(`📑 Indexar: POST http://localhost:${PORT}/api/documents/:id/index`);
+  console.log(`🔍 Busca: GET http://localhost:${PORT}/api/search?q=...`);
 });
