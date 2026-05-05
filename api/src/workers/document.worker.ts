@@ -3,7 +3,7 @@ dotenv.config();
 
 import { getDocument, updateDocumentStatus } from '../config/database';
 import { imageToText, pdfToText } from '../services/ocr.service';
-import { extractDocumentData } from '../services/groq.service';
+import { runAgentPipeline } from '../agents/docflow.agent';
 import path from 'path';
 
 export async function processDocument(documentId: string, filePath: string) {
@@ -25,12 +25,11 @@ export async function processDocument(documentId: string, filePath: string) {
 
     console.log('📝 Texto extraído: ' + ocrText.substring(0, 200) + '...');
 
-    const extractedData = await extractDocumentData(ocrText);
-    console.log('🤖 Dados extraídos:', JSON.stringify(extractedData, null, 2));
+    const agentResult = await runAgentPipeline(ocrText);
 
     await updateDocumentStatus(documentId, 'COMPLETED', {
       ocrText: ocrText.substring(0, 10000),
-      extractedData: extractedData,
+      extractedData: agentResult,
     });
 
     console.log('✨ Documento ' + documentId + ' processado com sucesso');
