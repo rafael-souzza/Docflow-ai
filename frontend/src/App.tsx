@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API = 'http://localhost:3000/api';
+const API = 'https://reimagined-funicular-gxqrv9575vg539999-3000.app.github.dev/api';
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
