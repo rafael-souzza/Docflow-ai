@@ -1,6 +1,7 @@
 import Tesseract from 'tesseract.js';
 import sharp from 'sharp';
 import fs from 'fs/promises';
+import path from 'path';
 
 export async function imageToText(imagePath: string): Promise<string> {
   try {
@@ -25,12 +26,26 @@ export async function imageToText(imagePath: string): Promise<string> {
 }
 
 export async function pdfToText(pdfPath: string): Promise<string> {
-  const pdfParse = require('pdf-parse');
+  const { fromPath } = require('pdf2pic');
+  const outputDir = path.dirname(pdfPath);
   
-  const dataBuffer = await fs.readFile(pdfPath);
-  const data = await pdfParse(dataBuffer);
+  const options = {
+    density: 150,
+    saveFilename: path.basename(pdfPath, '.pdf'),
+    savePath: outputDir,
+    format: 'png',
+    width: 1200,
+    height: 1600,
+  };
+
+  const convert = fromPath(pdfPath, options);
+  const result = await convert(1); // só primeira página
   
-  console.log(`📄 PDF processado: ${data.numpages} páginas, ${data.text.length} caracteres`);
+  if (!result?.path) throw new Error('Falha ao converter PDF');
   
-  return data.text.substring(0, 8000);
+  const text = await imageToText(result.path);
+  await fs.unlink(result.path).catch(() => {});
+  
+  console.log('PDF processado via OCR');
+  return text.substring(0, 8000);
 }
