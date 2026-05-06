@@ -1,9 +1,7 @@
-import { createDocument, getDocument } from '../config/database';
-import { validateFile, sanitizeFilename, ensureUploadDir } from '../utils/file.utils';
-import { documentQueue } from '../services/queue.service';
-import path from 'path';
-import fs from 'fs/promises';
-import { v4 as uuidv4 } from 'uuid';
+const { validateFile, sanitizeFilename, ensureUploadDir } = require('../utils/file.utils');
+const { documentQueue } = require('../services/queue.service');
+const path = require('path');
+const fs = require('fs/promises');
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 
@@ -24,6 +22,8 @@ export async function uploadDocument(req: any, res: any) {
     const filePath = path.join(UPLOAD_DIR, sanitized);
     await fs.writeFile(filePath, req.file.buffer);
 
+    const { createDocument } = require('../config/database');
+    const { v4: uuidv4 } = require('uuid');
     const doc = await createDocument({
       id: uuidv4(),
       filename: sanitized,
@@ -43,21 +43,29 @@ export async function uploadDocument(req: any, res: any) {
     });
   } catch (error: any) {
     console.error('Erro no upload:', error);
-    return res.status(500).json({ error: 'Erro interno no servidor' });
+    return res.status(500).json({ error: error.message });
   }
 }
 
 export async function getDocumentStatus(req: any, res: any) {
   try {
+    const { getDocument } = require('../config/database');
     const doc = await getDocument(req.params.id);
-
     if (!doc) {
       return res.status(404).json({ error: 'Documento não encontrado' });
     }
-
     return res.json(doc);
   } catch (error: any) {
-    console.error('Erro ao buscar documento:', error);
-    return res.status(500).json({ error: 'Erro interno no servidor' });
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+export async function listDocuments(req: any, res: any) {
+  try {
+    const { query } = require('../config/database');
+    const result = await query('SELECT id, "originalName", status, "extractedData", "createdAt" FROM "Document" ORDER BY "createdAt" DESC LIMIT 20');
+    return res.json(result.rows);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
   }
 }
